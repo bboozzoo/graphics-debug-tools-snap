@@ -19,6 +19,12 @@ apps:
       - x11
       - opengl
 
+  vulkaninfo:
+    command: usr/bin/vulkaninfo
+    plugs:
+      - x11
+      - opengl
+
 parts:
   glxinfo:
     plugin: nil
@@ -29,3 +35,8 @@ parts:
     plugin: nil
     stage-packages:
       - x11-xserver-utils
+
+  vulkaninfo:
+    plugin: nil
+    stage-packages:
+      - vulkan-utils
