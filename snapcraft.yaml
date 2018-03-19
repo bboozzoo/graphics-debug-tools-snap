@@ -1,0 +1,25 @@
+name: graphics-debug-tools
+version: 1.0
+summary: collection of utilities for debugging graphics issues
+description: |
+  A collection of utilities for debugging graphics issues. Those are:
+    - glxinfo
+    - xrandr
+
+apps:
+  glxinfo:
+    command: usr/bin/glxinfo
+
+  xrandr:
+    command: usr/bin/xrandr
+
+parts:
+  glxinfo:
+    plugin: nil
+    stage-packages:
+      - mesa-utils
+
+  xrandr:
+    plugin: nil
+    stage-packages:
+      - x11-xserver-utils
