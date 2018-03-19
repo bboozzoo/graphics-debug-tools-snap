@@ -9,9 +9,15 @@ description: |
 apps:
   glxinfo:
     command: usr/bin/glxinfo
+    plugs:
+      - x11
+      - opengl
 
   xrandr:
     command: usr/bin/xrandr
+    plugs:
+      - x11
+      - opengl
 
 parts:
   glxinfo:
