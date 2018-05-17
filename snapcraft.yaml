@@ -5,6 +5,8 @@ description: |
   A collection of utilities for debugging graphics issues. Those are:
     - glxinfo
     - xrandr
+    - vulkaninfo
+    - eglinfo
 
 apps:
   glxinfo:
@@ -25,6 +27,12 @@ apps:
       - x11
       - opengl
 
+  eglinfo:
+    command: bin/eglvendor-wrapper $SNAP/usr/bin/eglinfo
+    plugs:
+      - x11
+      - opengl
+
 parts:
   glxinfo:
     plugin: nil
@@ -40,3 +48,37 @@ parts:
     plugin: nil
     stage-packages:
       - vulkan-utils
+
+  eglinfo:
+    plugin: waf
+    source: https://github.com/dv1/eglinfo
+    source-type: git
+    configflags:
+      - --platform=x11
+      - --prefix=/usr
+      - --verbose
+    build-packages:
+      - gcc
+      - g++
+      - libx11-dev
+      - libegl1-mesa-dev
+      - libgl1-mesa-dev
+    stage:
+      - usr/bin/eglinfo
+
+  eglvendor-wrapper:
+    plugin: nil
+    install: |
+      set -ex
+      mkdir $SNAPCRAFT_PART_INSTALL/bin
+      cat <<\EOF > $SNAPCRAFT_PART_INSTALL/bin/eglvendor-wrapper
+      #!/bin/sh
+      if [ -d /var/lib/snapd/lib/glvnd/egl_vendor.d ]; then
+          __EGL_VENDOR_LIBRARY_DIRS=/var/lib/snapd/lib/glvnd/egl_vendor.d
+          export __EGL_VENDOR_LIBRARY_DIRS
+      fi
+      exec "$@"
+      EOF
+      chmod +x $SNAPCRAFT_PART_INSTALL/bin/eglvendor-wrapper
+    stage:
+      - bin/eglvendor-wrapper
