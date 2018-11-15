@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -ex
+
+snap_ocl_vendors="$SNAP_COMMON/OpenCL/vendors"
+# clean slate, drop everything we have there
+rm -rf "$snap_ocl_vendors"
+mkdir -p "$snap_ocl_vendors"
+find "$snap_ocl_vendors" -name '*.icd' | xargs rm -f
+for f in $(find /etc/OpenCL/vendors/ "$SNAP/etc/OpenCL/vendors" -name '*.icd'); do
+    cp "$f" "$snap_ocl_vendors/"
+done
+cp "$SNAP/intel-beignet-x86_64-linux-gnu.icd" "$snap_ocl_vendors/"

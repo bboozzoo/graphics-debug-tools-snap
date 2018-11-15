@@ -1,12 +1,34 @@
 name: graphics-debug-tools-bboozzoo
-version: 1.0
+version: "1.0"
 summary: collection of utilities for debugging graphics issues
 description: |
-  A collection of utilities for debugging graphics issues. Those are:
+  A collection of utilities for debugging graphics/compute issues. Those are:
     - glxinfo
     - xrandr
     - vulkaninfo
     - eglinfo
+    - clinfo
+confinement: strict
+base: core18
+
+layout:
+  # NOTE: this does not work yet, we found a bug in snap-update-ns
+  #
+  # OpenCL ICD loader needs to see vendor icd files in a very specific place
+  # /etc/OpenCL/vendors/mesa.icd:
+  #   bind-file: $SNAP/etc/OpenCL/vendors/mesa.icd
+  # use beignet ICD provided by the snap
+  # /etc/OpenCL/vendors/intel-beignet-x86_64-linux-gnu.icd:
+  #   bind-file: $SNAP/intel-beignet-x84_64-linux-gnu-icd
+  # Vulkan ICD loader needs to see vendor icd files in a very specific place
+  /usr/share/vulkan:
+    bind: $SNAP/usr/share/vulkan
+
+hooks:
+  # hooks collects OpenCL ICD files
+  connect-plug-opengl:
+    plugs:
+      - opengl
 
 apps:
   glxinfo:
@@ -33,6 +55,14 @@ apps:
       - x11
       - opengl
 
+  clinfo:
+    command: usr/bin/clinfo
+    plugs:
+      - x11
+      - opengl
+    environment:
+      OCL_ICD_VENDORS: $SNAP_COMMON/OpenCL/vendors
+
 parts:
   glxinfo:
     plugin: nil
@@ -48,6 +78,34 @@ parts:
     plugin: nil
     stage-packages:
       - vulkan-utils
+
+  mesa-vulkan:
+    plugin: nil
+    stage-packages:
+      - mesa-vulkan-drivers
+
+  clinfo:
+    plugin: nil
+    stage-packages:
+      - clinfo
+      - mesa-opencl-icd
+
+  beignet:
+    plugin: nil
+    stage-packages:
+      - beignet-opencl-icd
+
+  beignet-override:
+    plugin: nil
+    override-build: |
+      # beignet ICD file hardcodes the path to libcl.so under
+      # /usr/lib/x86_64-linux-gnu/beignet, generate a new icd file pointing to
+      # $SNAP specific location that we will drop in the right place
+      echo /snap/graphics-debug-tools-bboozzoo/current/usr/lib/x86_64-linux-gnu/beignet/libcl.so > $SNAPCRAFT_PART_INSTALL/intel-beignet-x86_64-linux-gnu.icd
+    after:
+      - beignet
+    stage:
+      - intel-beignet-x86_64-linux-gnu.icd
 
   eglinfo:
     plugin: waf
@@ -68,7 +126,7 @@ parts:
 
   eglvendor-wrapper:
     plugin: nil
-    install: |
+    override-build: |
       set -ex
       mkdir $SNAPCRAFT_PART_INSTALL/bin
       cat <<\EOF > $SNAPCRAFT_PART_INSTALL/bin/eglvendor-wrapper
