@@ -10,6 +10,8 @@ description: |
     - clinfo
 confinement: strict
 base: core18
+architectures:
+  - amd64
 
 layout:
   # NOTE: this does not work yet, we found a bug in snap-update-ns
